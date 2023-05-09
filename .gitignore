@@ -1,0 +1,6 @@
+**/*.nupkg
+**/*.zip
+**/*.msi
+**/*.exe
+.vscode/
+
