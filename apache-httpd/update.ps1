@@ -1,5 +1,7 @@
 ﻿Import-Module au
 
+. "tools\helpers.ps1"
+
 # $releases = 'https://www.apachehaus.com/cgi-bin/download.plx'
 $releases = 'https://www.apachelounge.com/download/'
 
@@ -10,9 +12,26 @@ $global:au_NoCheckChocoVersion = $true
 function global:au_BeforeUpdate {
   Get-RemoteFiles -NoSuffix
   $Latest.ChecksumType64 = 'sha512'
-  $Latest.Checksum64 = Get-FileHash "tools\$($Latest.FileName64)" -Algorithm SHA512 | ForEach-Object -MemberName Hash
+  # 128 Hexa characters.
+  $checkSumRegEx = "([A-Z0-9]{128})"
+  $file = "tools\$($Latest.FileName64)"
+  # get checksum from remote
+  try {
+    $downloadSha = Invoke-WebRequest -Uri "$($Latest.Url64).txt" -Headers @{ 'Accept' = '*/*'; 'User-Agent' = 'Mozilla/5.0' }
+  }
+  catch {
+    $downloadSha = $_.Exception.Response
+    write-host ("Exception: {0}" -f $_.Exception.Message)
+  }
+  $matching = [regex]::match($downloadSha.Content, $checkSumRegEx)
+  if (!(Assert-ChecksumMatch(@{ 'shaType' = $Latest.ChecksumType64; 'checksum' = $matching.Groups[0].Value; 'file' = $file }))) {
+    throw "Checksum ($($Latest.ChecksumType64)) for $($Latest.Url64) does not match $($matching.Groups[0].Value)"
+  }
+  else {
+    Write-Host "Checksum ($($Latest.ChecksumType64)) for $($Latest.Url64) matches $($matching.Groups[0].Value)"
+  }
+  $Latest.Checksum64 = (Get-FileHash $file -Algorithm $Latest.ChecksumType64).Hash
 }
-
 function global:au_GetLatest {
   $versionRegEx = 'httpd\-([\d\.]+)[a-z]*\-win64\-(VS17)[a-z]*\.zip'
 
@@ -58,7 +77,5 @@ function global:au_SearchReplace {
   }
 }
 
-# TODO retrieve checksums at https://www.apachelounge.com/download/$($matching.Groups[2].Value)/binaries/$($matching.Groups[0].Value).txt
-# retrieve sha512 and compare
-
-update -ChecksumFor none -Debug
+# checksum compared in au_BeforeUpdate
+update -ChecksumFor none

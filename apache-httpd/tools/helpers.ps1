@@ -1,26 +1,26 @@
 ﻿
 function Get-TCPConnections {
     param(
-    [int]$portNumber
+        [int]$portNumber
     )
     $ListeningPort = @()
-    $GetPorts =  netstat -nao | Select-String ":$portNumber  " | Select-Object -First 2
-        Foreach ($Port in $GetPorts) {
+    $GetPorts = netstat -nao | Select-String ":$portNumber  " | Select-Object -First 2
+    Foreach ($Port in $GetPorts) {
         $a = $Port -split '\s\s*'
-          if ( $a[2] -match ":$portNumber" ) {
-          $Ports = New-Object System.Object
-          $LA = $a[2] -split":"
-          $FA = $a[3] -split":"
-          $Ports | Add-Member -MemberType NoteProperty -Name 'LocalAddress' -Value $LA[0]
-          $Ports | Add-Member -MemberType NoteProperty -Name 'LocalPort' -Value $LA[1]
-          $Ports | Add-Member -MemberType NoteProperty -Name 'RemoteAddress' -Value $FA[0]
-          $Ports | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $FA[1]
-          $Ports | Add-Member -MemberType NoteProperty -Name 'State' -Value $a[4]
-          $Ports | Add-Member -MemberType NoteProperty -Name 'OwningProcess' -Value $a[5]
-          }
+        if ( $a[2] -match ":$portNumber" ) {
+            $Ports = New-Object System.Object
+            $LA = $a[2] -split ":"
+            $FA = $a[3] -split ":"
+            $Ports | Add-Member -MemberType NoteProperty -Name 'LocalAddress' -Value $LA[0]
+            $Ports | Add-Member -MemberType NoteProperty -Name 'LocalPort' -Value $LA[1]
+            $Ports | Add-Member -MemberType NoteProperty -Name 'RemoteAddress' -Value $FA[0]
+            $Ports | Add-Member -MemberType NoteProperty -Name 'RemotePort' -Value $FA[1]
+            $Ports | Add-Member -MemberType NoteProperty -Name 'State' -Value $a[4]
+            $Ports | Add-Member -MemberType NoteProperty -Name 'OwningProcess' -Value $a[5]
+        }
         $ListeningPort += $Ports
-       }
- return $ListeningPort
+    }
+    return $ListeningPort
 }
 
 function Assert-TcpPortIsOpen {
@@ -31,7 +31,7 @@ function Assert-TcpPortIsOpen {
 
     $process = Get-TCPConnections -portNumber $portNumber | `
         Select-Object -First 1 -ExpandProperty OwningProcess | `
-        Select-Object @{Name = "Id"; Expression = {$_} } | `
+        Select-Object @{Name = "Id"; Expression = { $_ } } | `
         Get-Process | `
         Select-Object Name, Path
 
@@ -86,7 +86,7 @@ function Install-Apache {
     Set-ApacheConfig $arguments
 
     if ($arguments.serviceName) {
-      Install-ApacheService $arguments
+        Install-ApacheService $arguments
     }
 
     Set-ApacheInstallOptions $arguments
@@ -136,7 +136,7 @@ function Set-ApacheInstallOptions {
 
     $config = @{
         Destination = $apachePaths.ApacheDir
-        BinPath   = $apachePaths.BinPath
+        BinPath     = $apachePaths.BinPath
         ServiceName = $arguments.serviceName
     }
 
@@ -158,7 +158,7 @@ function Uninstall-Apache {
     $config = Get-ApacheInstallOptions
 
     if ($config.serviceName) {
-      & $config.BinPath -k uninstall -n "$($config.serviceName)"
+        & $config.BinPath -k uninstall -n "$($config.serviceName)"
     }
 
     Remove-Item $config.destination -Recurse -Force
@@ -175,10 +175,19 @@ function Uninstall-ApacheService {
     & $apachePaths.BinPath -k uninstall -n "$($arguments.serviceName)"
 }
 
-function Assert-ChecksumMatch{
+function Assert-ChecksumMatch {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0, Mandatory)][ValidateNotNullOrEmpty()][PSCustomObject] $arguments
     )
-    
+    $shaType = $arguments.shaType
+    $checksum = $arguments.checksum
+    $file = $arguments.file
+
+    $hash = (Get-FileHash $file -Algorithm $shaType).Hash
+    Write-Debug("$($file), $($shaType), $($checksum), $($hash)")
+    if ($hash -eq $checksum) {
+        return $true;
+    }
+    return $false;
 }
