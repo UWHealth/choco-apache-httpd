@@ -120,7 +120,7 @@ function Set-ApacheConfig {
     $httpConf = Get-Content $apachePaths.ConfPath
     $httpConf = $httpConf -replace 'Define SRVROOT.*', "Define SRVROOT ""$($apachePaths.ApacheDir -replace '\\', '/')"""
     $httpConf = $httpConf -replace 'Listen 80', "Listen $($arguments.port)"
-    $httpConf = $httpConf -replace "# Supplemental configuration", "# Supplemental (modified) configuration`r`nInclude $($customConfigIncludePath)`r`n"
+    $httpConf = $httpConf -replace "# Supplemental configuration", "# Supplemental (modified) configuration`r`nIncludeOptional $($customConfigIncludePath)`r`n"
 
 
     Set-Content -Path $apachePaths.ConfPath -Value $httpConf -Encoding Ascii
