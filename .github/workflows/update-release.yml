@@ -25,6 +25,8 @@ jobs:
     steps:
     - name: Checkout GitHub Action
       uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.SSH_KEY_COMMIT_PUSH }}
 
     - name: Install Choco Auto Updates
       run: choco install au -y
