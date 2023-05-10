@@ -1,0 +1,50 @@
+name: Update and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-only:
+        type: boolean
+        default: true
+  schedule:
+    - cron: '0 5 * * 1,3,5'
+
+env:
+  PACKAGE: apache-httpd
+
+permissions:
+  contents: write
+  
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: .\apache-httpd
+    steps:
+    - name: Checkout GitHub Action
+      uses: actions/checkout@v3
+
+    - name: Install Choco Auto Updates
+      run: choco install au -y
+
+    - name: Build Package
+      id: build-package
+      run: |
+        .\update.ps1
+        echo "VERSION=$Env:CHOCO_PACKAGE_VERSION" >> $Env:GITHUB_ENV
+
+    - name: Commit and Push
+      if: ${{ github.event_name == 'workflow_dispatch' && !inputs.build-only }}
+      run: |
+        git add -A
+        git commit -m "Updated $Env:PACKAGE to $Env:VERSION"
+        git push
+
+    - name: Release and Upload
+      if: ${{ github.event_name == 'workflow_dispatch' && !inputs.build-only }}
+      run: gh release create "v$Env:VERSION" --latest --title "Updated $Env:PACKAGE to $Env:VERSION" `
+        --notes "<https://www.apachelounge.com/Changelog-2.4.html>" "$env:PACKAGE.$Env:VERSION.nupkg"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
