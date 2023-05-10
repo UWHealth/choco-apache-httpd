@@ -79,3 +79,4 @@ function global:au_SearchReplace {
 
 # checksum compared in au_BeforeUpdate
 update -ChecksumFor none
+$env:CHOCO_PACKAGE_VERSION = $Latest.Version
