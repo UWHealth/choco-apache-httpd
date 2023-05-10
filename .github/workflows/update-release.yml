@@ -39,7 +39,7 @@ jobs:
         echo "VERSION=$Env:CHOCO_PACKAGE_VERSION" >> $Env:GITHUB_ENV
 
     - name: Commit and Push
-      if: !env.BUILD_ONLY
+      if: ${{ env.BUILD_ONLY != 'true' }}
       run: |
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git config user.name github-actions[bot]
@@ -48,7 +48,7 @@ jobs:
         
     # using a GitHub App will allow other workflows to trigger (on release)
     - name: Get UW Health Repo Bot Token
-      if: !env.BUILD_ONLY
+      if: ${{ env.BUILD_ONLY != 'true' }}
       id: uw-health-repo-bot
       uses: peter-murray/workflow-application-token-action@v2
       with:
@@ -56,7 +56,7 @@ jobs:
         application_private_key: ${{ secrets.UW_HEALTH_REPO_BOT_PRIVATE_KEY }}
 
     - name: Release and Upload
-      if: !env.BUILD_ONLY
+      if: ${{ env.BUILD_ONLY != 'true' }}
       run: gh release create "v$Env:VERSION" --latest --title "Updated $Env:PACKAGE to $Env:VERSION" `
         --notes "<https://www.apachelounge.com/Changelog-2.4.html>" "$env:PACKAGE.$Env:VERSION.nupkg"
       env:
