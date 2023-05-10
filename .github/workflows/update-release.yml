@@ -38,9 +38,9 @@ jobs:
     - name: Commit and Push
       if: ${{ github.event_name == 'workflow_dispatch' && !inputs.build-only }}
       run: |
-        git add -A
-        git commit -m "Updated $Env:PACKAGE to $Env:VERSION"
-        git push
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+        git config user.name github-actions[bot]
+        git add -A && git commit -m "Updated $Env:PACKAGE to $Env:VERSION" && git push
 
     - name: Release and Upload
       if: ${{ github.event_name == 'workflow_dispatch' && !inputs.build-only }}
