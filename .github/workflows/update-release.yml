@@ -12,6 +12,7 @@ on:
 env:
   PACKAGE: apache-httpd
   BUILD_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.build-only }}
+  CHANGES: 'false'
 
 permissions:
   contents: write
@@ -44,11 +45,12 @@ jobs:
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git config user.name github-actions[bot]
         git fetch --force
-        git add -A && git commit -m "Updated $Env:PACKAGE to $Env:VERSION" && git push
+        $changes = $(git status --porcelain)
+        if($changes.length -gt 0){ git add -A && git commit -m "Updated $Env:PACKAGE to $Env:VERSION" && git push && echo "CHANGES=true" >> $Env:GITHUB_ENV}
         
     # using a GitHub App will allow other workflows to trigger (on release)
     - name: Get UW Health Repo Bot Token
-      if: ${{ env.BUILD_ONLY != 'true' }}
+      if: ${{ env.BUILD_ONLY != 'true' && env.CHANGES != 'false' }}
       id: uw-health-repo-bot
       uses: peter-murray/workflow-application-token-action@v2
       with:
@@ -56,7 +58,7 @@ jobs:
         application_private_key: ${{ secrets.UW_HEALTH_REPO_BOT_PRIVATE_KEY }}
 
     - name: Release and Upload
-      if: ${{ env.BUILD_ONLY != 'true' }}
+      if: ${{ env.BUILD_ONLY != 'true' && env.CHANGES != 'false' }}
       run: gh release create "v$Env:VERSION" --latest --title "Updated $Env:PACKAGE to $Env:VERSION" `
         --notes "<https://www.apachelounge.com/Changelog-2.4.html>" "$env:PACKAGE.$Env:VERSION.nupkg"
       env:
