@@ -5,7 +5,7 @@
 # $releases = 'https://www.apachehaus.com/cgi-bin/download.plx'
 $releases = 'https://www.apachelounge.com/download/'
 
-$versionPostfix = "0002"
+$versionPostfix = "1"
 
 $global:au_NoCheckChocoVersion = $true
 
