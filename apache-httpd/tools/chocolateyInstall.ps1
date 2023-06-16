@@ -8,7 +8,7 @@ $arguments = @{
     file64      = "$toolsDir\httpd-2.4.57-win64-VS17.zip"
     modLogRotate = "$toolsDir\mod_log_rotate-win64-VS17.so"
     destination = if ($pp.installLocation) { $pp.installLocation } else { $env:ProgramFiles }
-    port        = if ($pp.Port) { $pp.Port } else { 81 }
+    port        = if ($pp.Port) { $pp.Port } else { 80 }
     serviceName = if ($pp.NoService) { $null } elseif ($pp.serviceName) { $pp.serviceName } else { 'Apache' }
 }
 
